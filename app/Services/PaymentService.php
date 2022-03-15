@@ -4,133 +4,83 @@ declare(strict_types=1);
 
 namespace App\Services;
 
-use App\Repositories\AuthenticateRepository;
+use GuzzleHttp\Client;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Throwable;
 use Illuminate\Http\Request;
 use Exception;
 
-class CurrencyLayerService extends BaseService
+class PaymentService extends BaseService
 {
     /**
-     * Get Currency Conversions
+     * Pay with NAB
      *
-     * @param string $currencies
+     * @param array $data
      *
      * @return array
      */
-    public function getCurrencyConversion(string $currencies): array
+    public function payWithNAB(array $data): array
     {
         try {
-            $rates = $this->callEndpoint('live', $currencies);
-            $newcurrencyarray = array();
-
-            $i = 0;
-            foreach($rates['quotes'] as $quote) {
-                $newcurrencyarray[] = [
-                    'rate' => array_values($rates['quotes'])[$i],
-                    'name' => array_keys($rates['quotes'])[$i]
-                ];
-                $i++;
-            }
-
-            return $this->sendSuccessResponse($newcurrencyarray);
+            $response = Http::withHeaders([
+                "Content-Type" => "text/xml;charset=utf-8"
+            ])->send("POST", env('NAB_API'), [
+                "body" => '<?xml version="1.0" encoding="UTF-8"?>
+                        <from>
+                        <card_number>'.$data['credit_card_number'].'</card_number>
+                        <card_name>'.$data['credit_card_name'].'</card_name>
+                        <cvv>'.$data['cvv'].'</cvv>
+                        </from>
+                        <amount>'.$data['amount'].'</amount>
+                        <merchant_id>'.env('NAB_MERCHANT_ID').'</merchant_id>
+                        <merchant_key>'.env('NAB_MERCHANT_KEY').'</merchant_key>'
+            ]);
+            if ($response->status() == 200)
+                return $this->sendSuccessResponse($response);
+            else
+            return $this->sendFailureResponse($response->reason(), $response->getCode());
         } catch (Throwable $e) {
             Log::error($e->getMessage());
-            return $this->sendFailureResponse($e->getMessage(), $e->getCode());
+            return $this->sendFailureResponse($e->getMessage(), 406);
         }
     }
 
     /**
-     * Get Historical Currency Data
+     * Pay with ANZ
      *
-     * @param string $currencies
-     *
-     * @return array
-     */
-    public function getHistoricalData(string $currencies, string $date): array
-    {
-        try {
-            $rates = $this->callEndpoint('historical', $currencies, $date);
-            $newcurrencyarray = array();
-
-            $i = 0;
-            foreach($rates['quotes'] as $quote) {
-                $newcurrencyarray[] = [
-                    'rate' => array_values($rates['quotes'])[$i],
-                    'name' => array_keys($rates['quotes'])[$i]
-                ];
-                $i++;
-            }
-
-            return $this->sendSuccessResponse($newcurrencyarray);
-        } catch (Throwable $e) {
-            Log::error($e->getMessage());
-            return $this->sendFailureResponse($e->getMessage(), $e->getCode());
-        }
-    }
-
-    /**
-     * Get All Currencies
+     * @param array $data
      *
      * @return array
      */
-    public function getCurrencies(): array
+    public function payWithANZ(array $data): array
     {
         try {
-            $currencies = $this->callEndpoint('list');
-            $newcurrencyarray = array();
+            $client = new Client([
+                'headers' => [ 'Content-Type' => 'application/json' ]
+            ]);
 
-            $i = 0;
-            foreach($currencies['currencies'] as $curr) {
-                $newcurrencyarray[] = [
-                    'name' => array_values($currencies['currencies'])[$i],
-                    'code' => array_keys($currencies['currencies'])[$i]
-                ];
-                $i++;
-            }
+            $response = $client->post(env('ANZ_API'),
+                ['body' => json_encode(
+                    [
+                        'from' => [
+                            'card_number' => $data['credit_card_number'],
+                            'card_name' => $data['credit_card_name'],
+                            'cvv' => $data['cvv']
+                        ],
+                        'amount' => $data['amount'],
+                        'merchant_id' => env('ANZ_MERCHANT_ID'),
+                        'merchant_key' => env('ANZ_MERCHANT_KEY')
+                    ]
+                )]
+            );
 
-            return $this->sendSuccessResponse($newcurrencyarray);
-
+            if ($response->getStatusCode() == 200)
+                return $this->sendSuccessResponse($response);
         } catch (Throwable $e) {
             Log::error($e->getMessage());
-            return $this->sendFailureResponse($e->getMessage(), $e->getCode());
+            return $this->sendFailureResponse($e->getMessage(), 406);
         }
-    }
-
-    /**
-     * Call Currency Layer Endpoint
-     *
-     * @param string $endpoint
-     * @param string $currencies
-     *
-     * @return string
-     */
-    public function callEndpoint(string $endpoint, string $currencies = '', string $date = null)
-    {
-        // set API Endpoint and access key (and any options of your choice)
-        $access_key = env('CURRENCYLAYER_API_KEY');
-
-        // Initialize CURL:
-        if ($date)
-        {
-            $ch = curl_init('http://api.currencylayer.com/'.$endpoint.'?access_key='.$access_key.'&currencies='. $currencies .'&format=1'.'&date='.$date);
-        }
-        else
-        {
-            $ch = curl_init('http://api.currencylayer.com/'.$endpoint.'?access_key='.$access_key.'&currencies='. $currencies .'&format=1');
-        }
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-
-        // Store the data:
-        $json = curl_exec($ch);
-        curl_close($ch);
-
-        // Decode JSON response:
-        $exchangeRates = json_decode($json, true);
-
-        return $exchangeRates;
-
     }
 }
