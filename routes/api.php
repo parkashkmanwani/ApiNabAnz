@@ -1,10 +1,8 @@
 <?php
 
-use App\Http\Controllers\AuthenticateController;
-use App\Http\Controllers\CurrencyConversionController;
+use App\Http\Controllers\PayCreditCardController;
 use Illuminate\Http\Request;
 
-use App\Http\Middleware\CheckUser;
 /*
 |--------------------------------------------------------------------------
 | API Routes
@@ -16,11 +14,8 @@ use App\Http\Middleware\CheckUser;
 |
 */
 
-Route::group(['middleware' => [CheckUser::class]], function () {
-    Route::post('authenticate', [AuthenticateController::class, 'authenticate'])->middleware("cors");
-    Route::post('getrates', [CurrencyConversionController::class, 'getRates'])->middleware("cors");
-    Route::post('currencies', [CurrencyConversionController::class, 'getCurrencies'])->middleware("cors");
-    Route::post('gethistorical', [CurrencyConversionController::class, 'getHistorical'])->middleware("cors");
-});
+Route::post('payCreditCard', [PayCreditCardController::class, 'payCard']);
 
-Route::post('create', [AuthenticateController::class, 'create'])->middleware("cors");
+
+
+
