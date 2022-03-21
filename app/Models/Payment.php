@@ -6,7 +6,6 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Validation\Rule;
 
 /**
  * App\Models\Payment
@@ -33,7 +32,7 @@ class Payment extends Model
                     'credit_card_name' => 'required|string',
                     'cvv' => 'required|int',
                     'date' => 'required|date',
-                    'amount' => 'required|int'
+                    'amount' => 'required|int',
                 ];
         }
     }

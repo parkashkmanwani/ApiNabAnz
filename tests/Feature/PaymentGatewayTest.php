@@ -2,8 +2,6 @@
 
 namespace Tests\Feature;
 
-use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Foundation\Testing\WithFaker;
 use Tests\TestCase;
 
 class PaymentGatewayTest extends TestCase
@@ -22,7 +20,7 @@ class PaymentGatewayTest extends TestCase
             'cvv' => '123',
             'date' => '11/12/2025',
             'amount' => 10.00,
-            'submit' => 'anz'
+            'submit' => 'anz',
         ];
 
         $this->json('POST', 'payCreditCard', $payload)->assertStatus(200);
@@ -42,14 +40,14 @@ class PaymentGatewayTest extends TestCase
             'cvv' => '123',
             'date' => '11/12/2025',
             'amount' => "10.00",
-            'submit' => 'anz'
+            'submit' => 'anz',
         ];
 
-        $this->json('POST', 'payCreditCard', $payload)->assertStatus(400)->assertJson([
+        $this->json('POST', 'payCreditCard', $payload)->assertStatus(422)->assertJsonFragment([
             "amount" => [
-                "The amount must be an integer."
-            ]
-            ]);
+                "The amount must be an integer.",
+            ],
+        ]);
     }
 
     /**
@@ -66,7 +64,7 @@ class PaymentGatewayTest extends TestCase
             'cvv' => '123',
             'date' => '11/12/2025',
             'amount' => 10.00,
-            'submit' => 'nab'
+            'submit' => 'nab',
         ];
 
         $this->json('POST', 'payCreditCard', $payload)->assertStatus(200);
@@ -86,7 +84,7 @@ class PaymentGatewayTest extends TestCase
             'cvv' => '123',
             'date' => '11/12/2025',
             'amount' => 10.00,
-            'submit' => 'nab'
+            'submit' => 'nab',
         ];
 
         $this->json('POST', 'payCreditCard', $payload)->assertStatus(406);
