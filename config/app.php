@@ -121,6 +121,15 @@ return [
 
     'key' => env('APP_KEY'),
 
+    'NAB_API' => env('NAB_API'),
+    'NAB_MERCHANT_ID' => env('NAB_MERCHANT_ID'),
+    'NAB_MERCHANT_KEY' => env('NAB_MERCHANT_KEY'),
+
+    'ANZ_API' => env('ANZ_API'),
+    'ANZ_MERCHANT_ID' => env('ANZ_MERCHANT_ID'),
+    'ANZ_MERCHANT_KEY' => env('ANZ_MERCHANT_KEY'),
+
+
     'cipher' => 'AES-256-CBC',
 
     /*
