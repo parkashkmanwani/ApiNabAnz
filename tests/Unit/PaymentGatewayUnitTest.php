@@ -10,7 +10,7 @@ use Tests\TestCase;
 class PaymentGatewayUnitTest extends TestCase
 {
     /**
-     * Mocking Anz Payment Gateway
+     * @test Mocking Anz Payment Gateway
      *
      * Expecting 200 status
      * @return void
