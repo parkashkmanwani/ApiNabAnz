@@ -2,8 +2,9 @@
 
 namespace Tests\Unit;
 
-use GuzzleHttp\Client;
-use GuzzleHttp\Psr7\Response;
+use App\Http\Controllers\PayCreditCardController;
+use App\Http\Requests\PaymentGatewayRequest;
+use App\Services\PaymentService;
 use Mockery;
 use Tests\TestCase;
 
@@ -13,22 +14,24 @@ class PaymentGatewayUnitTest extends TestCase
      * @test Mocking Anz Payment Gateway
      *
      * Expecting 200 status
-     * @return void
      */
-    public function MockAnzPaymentGateway(): void
+    public function MockAnzPaymentGateway(): array
     {
-        $mock = Mockery::mock(Client::class);
-        $mock->shouldReceive('payCard')->andReturn(new Response($status = 200, $headers = []));
+        $mock = Mockery::mock(PaymentService::class);
+        $service = new PayCreditCardController($mock);
 
-        $response = $this->post('/payCreditCard', [
+        $mock->shouldReceive('payWithANZ')->once()->andReturn(['Success', 200]);
+
+        $result = $service->payCard(new PaymentGatewayRequest([
             'credit_card_number' => 1234111112544674,
             'credit_card_name' => 'Test',
             'cvv' => 325,
             'date' => '12/10/2026',
             'amount' => 100,
             'submit' => "anz",
-        ]);
+        ]));
 
-        $response->assertStatus(200);
+        return ['Success', $result->getStatusCode()];
     }
+
 }
