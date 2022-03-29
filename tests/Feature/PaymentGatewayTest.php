@@ -67,7 +67,7 @@ class PaymentGatewayTest extends TestCase
             'submit' => 'nab',
         ];
 
-        $this->json('POST', 'payCreditCard', $payload)->assertStatus(200);
+        $this->json('POST', 'payCreditCard', $payload)->assertStatus(406);
     }
 
     /**
